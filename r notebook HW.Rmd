@@ -1,0 +1,60 @@
+---
+output:
+  pdf_document: default
+  html_document: default
+  word_document: default
+---
+#Fish Analysis
+# Indrit Istrefi
+# 10/13/20
+# fish <- read.csv("~/dssa_workspace/fish.csv")
+# install.packages(tidyverse', dependencies = TRUE)
+# library(tidyverse) # includes tibble, readr, dplyr, and several others
+```{r}
+fish <- read.csv("~/dssa_workspace/fish.csv")
+```
+
+# Alternatively I can load the individual packages
+---
+```{r}
+library(tibble)
+library(readr)
+library(dplyr)
+```
+
+#This notebook is about fish and the data came from kaggle. I downloaded the csv file and assigned it to a variable fish using the read.csv function
+
+
+# Below I ran the glimpse function on the file. This function makes it possible to see every column in the data frame
+```{r}
+glimpse(fish)
+```
+
+# Next I ran some simple statistics on the data frame using the summary function.
+```{r}
+summary(fish)
+```
+# I ran a dim function on the data frame and it returned the dimension and matrix
+```{r}
+dim(fish)
+```
+
+# The nrow function allows for me to see the amount of rows in the data frame. 
+```{r}
+nrow(fish)
+```
+It shows me the data frame has 5580 rows. That is a big dataset. 
+
+Next I looked in what was read with str function
+```{r}
+str(fish)
+```
+
+# Lastly I use the head command to see the first 10 obervations of the dataset
+```{r}
+head(fish)
+```
+
+# Although not too many commands were used we can see the data frame using the commands we have. We can gain knowledge based on this data frame with this simple command.
+
+
