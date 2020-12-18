@@ -1,0 +1,165 @@
+---
+title: "Rooney Rule R project"
+author: Indrit Istrefi
+---
+
+
+Here I load in the required packages
+```{r}
+library(tibble)
+library(readr)
+library(dplyr)
+library(stringr)
+library(lubridate)
+library(ggplot2)
+
+```
+
+My question is does the Rooney Rule in the NFL work. I want to know if minority coaching candidates get offered the same changes and opportunities. The NFL introduced the Rooney Rule in 2003, which requires at least one woman and one underrepresented minority to be considered for every open position. The reason I want to do this is because I want to prove that someone was hired over another person because of their abilities and not their skin color or nationality.
+
+I am looking at every head coach in NFL history, and the data is provided by pro football references. This provides everything about the head coaches. 
+
+
+
+I read in the csv with the variable coaches
+```{r}
+coaches <- read.csv('nfl_coaches.csv')
+```
+
+I take a look at the first couple of rows using the head command
+```{r}
+head(coaches)
+```
+Take a look at the data frame using the glimpse command
+```{r}
+glimpse(coaches)
+```
+
+
+
+Here I am adding a new column of the Year they started coaching and making it an integer. I did this because the Yr. Yr column was not an integer making it impossible to graph. This was one R limitation that stumped me was the years they were coaching. I would have like to keep it in the format it originally was in. 
+
+```{r}
+coaches$newYr <- str_sub(coaches$Yr.Yr, start = 1, end = 4)
+coaches$newYr<- as.integer(coaches$newYr)
+glimpse(coaches)
+
+```
+
+I filtered out minority coaches before the Rooney Rule took into place and after it took into place. Keep in mind the Rooney Rule took place in 2003 and that is why it is >= 2003. I did a nrow to show how many in each row. 
+```{r}
+
+coaches_before_rule <- coaches %>%
+  filter(newYr <= 2002, Minority=='Yes')%>%
+  nrow()
+  
+
+coaches_after_rule <- coaches %>%
+  filter(newYr >= 2003, Minority== 'Yes')%>%
+  nrow()
+glimpse(coaches_after_rule)
+glimpse(coaches_before_rule)
+
+```
+
+
+
+I create a data frame and create a bar graph to compare the amount of new hires before 2002 and after 2003. The graph shows the difference in new hires before and after the rule. The difference is surprising, before the Rooney Rule there was only 8 new minority head coach hires. This is also a 82 year span. After the Rooney Rule was introduced, that number more then doubled. This is in 1/4 the amount of time as well. 18 new minority head coaches were hired in 17 years.
+```{r}
+bar <- data.frame(x = c('Before 2002', 'Beyond 2003'), y = c(8, 18))
+ggplot(bar, aes(x = x, y = y, fill=x)) + expand_limits(y=20)+
+  geom_col(width=.5, stat="identity", color="blue", fill='black')+
+  theme_linedraw()+
+   geom_text(aes(label=y), vjust=5, color="white", size=4.5)+
+  labs(title= "New Minority Head Coaches Hires before and after Rooney Rule", x='Year', y='Amount of Coaches')+
+  theme(plot.title = element_text(hjust=1.0))
+```
+
+
+
+Here I hard code the amount of minority coaches in each year and make it into a data frame to plot. The x axis includes the year, and the y axis includes the amount of minority coaches in each year.
+```{r}
+line <- data.frame(x=c(2000,2001,2002,2003,2004,2005,2006,2007,2008,2009,2010,2011,2012,2013,2014,2015,2016,2017,2018,2019,2020),y=c(2,3,2,3,5,6,7,6,7,6,7,8,6,4,5,6,6,8,8,5,5))
+```
+
+
+I create a scatter plot, showing the amount of coaches each year from 2000-2020. The red dotted line shows when the year Rooney Rule came into place. Right after the dotted line you can see a spike in active minority coaches. The peak of 8 was hit three times. Unfortunately the trend is going back down.
+```{r}
+line_plot <- ggplot(line, aes(x=x, y=y))+
+  #geom_line()+
+  geom_point(shape=10, size=5)+
+   geom_vline(xintercept=c(2003), linetype="dotted", col='red')+
+  annotate('text', x=c(2003), y=8, label='Rooney Rule introduced', color='red')+
+  expand_limits(y=10)+
+  labs(x='Year', y='Amount of coaches')+
+  theme_light()
+  
+line_plot + labs(title = "Amount of Minority coaches vs Year")+
+  theme(plot.title = element_text(hjust=0.5))
+
+```
+
+
+Here I want to calculate the win loss percentage of coaches. First I calculate the amount of wins and loses for every coach that has coached for over 10 years regardless if they are a minority or not. I did this by calculating total wins and total losses. I then divide the amount of wins by the total amount of games and multiply it by 100. If you coach for over 10 years in NFL you are doing a good job, so this why I decide to include it in my graph. I do this for all non minority coaches and minority coaches. I am excluding ties so they do not have an effect on the outcome.
+
+```{r}
+all_coaches_10_yrs <- coaches %>%
+  filter(Yrs >10)%>%
+  summarize(w= sum(W), l=sum(L))
+head(all_coaches_10_yrs)
+#57.40
+
+non_minority <- coaches %>%
+  filter(Minority== 'No')%>%
+  summarize(w= sum(W), l=sum(L))
+head(non_minority)
+#49.3
+minority_coach <- coaches %>%
+  filter(Minority=='Yes')%>%
+  summarize(w= sum(W), l=sum(L))
+head(minority_coach)
+#50.98
+Win_lose= data.frame(x=c("All coaches over 10 yrs experience", "Non-minority coaches", "Minority coaches"), y=c(57.40, 49.30, 50.98))
+```
+
+Here I plot showing the difference in win percentage of the three. The reason for this graph is cause some people think the Rooney Rule is unfair. That is forces NFL teams to hire a minority coaching candidate even though they might not be fitted for the job. This graph proves those people wrong, as minority coaches actually have a higher win percentage then non minority coaches. 
+```{r}
+ggplot(Win_lose, aes(x = x, y = y)) +
+  geom_col(width=.5, stat="identity", color="blue", fill='black')+
+  theme_linedraw()+
+   geom_text(aes(label=y), vjust=10, color="white", size=4.5)+
+  labs(y='Win Loss %', x= 'COACHES', title='Difference in Win Loss % among Coaches')+
+  theme(plot.title = element_text(hjust=0.5))
+
+```
+
+I want to know the average years a minority coach coaches vs non minority. I am doing this to compare the average amount of years each coaching candidates get. 
+```{r}
+coach_yr_non_minority <- coaches %>%
+  filter(Minority== 'No')%>%
+  summarize(years=mean(Yrs))
+glimpse(coach_yr_non_minority)
+
+coach_yr_minority <- coaches %>%
+  filter(Minority== 'Yes')%>%
+  summarize(years=mean(Yrs))
+glimpse(coach_yr_minority)
+
+
+```
+
+I plot the difference in average years coached for minority coaches vs non minority coaches. And this graph shows on average minority coaches coach for 6.19 years and non minority coaches coach for 4.73 years. This shows minority coaches are also given a fair chance in keeping their job. As they actually average more years coaching then non-minority coaches.
+```{r}
+years_graph <- data.frame(x=c('Non-Minority Coaches', 'Minority Coaches'), y=c(4.73,6.19))
+ggplot(years_graph, aes(x=x, y=y))+
+  geom_col(width=.5, stat="identity", color="black", fill="black")+
+  theme_linedraw()+
+   geom_text(aes(label=y), vjust=10, color="white", size=4.5)+
+  labs(x='Coaches', y='Years', title='Difference in Average Years Coached')+
+  theme(plot.title= element_text(hjust=0.5))
+```
+
+
+It does appear the Rooney Rule in NFL has been effective. The amount of new coach hires has more then doubled since the rule came into effect. This was only in 1/4 amount of time. The second graph shows the amount of active minority coaches in each year from 2000-2020. After the rule was put into place the amount of active coaches rose by a great amount. Not only are more minority coaches being hired, but they are also delivering on the field. They have a higher win percentage then non-minority coaches. As many people say, the only thing that matters in the NFL is wins and losses. Minority coaches also hold onto their jobs longer, which shows that the Rooney Rule not only does a good job in new coach hires, but also them keeping it.
+
+Note I did this only on head coaches only. Based on the information for head coaches the Rooney Rule is doing its job effectively. I would like  in the future to look into offensive and defensive coordinators. This data would be interesting to look at because the sample size is greater. 
